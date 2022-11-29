@@ -1,0 +1,274 @@
+Список ошибок
+
+1. Некорректная реализация метода fillProducts()
+
+    a. Нарушение требования: функционирует только в режиме отладки; при запуске в
+                             некорректном режиме возвращает ILLEGAL_OPERATION, при корректном запуске
+                             возвращает ОК;
+        Исходный код:
+            public Response fillProducts()
+            {
+                num1 = max2;
+                num2 = max2;
+                return Response.OK;
+            }
+        Тест с неправильным ответом: mode == Mode.Operations
+        Заменяемый код:
+            public Response fillProducts()
+            {
+                if(mode == Mode.OPERATION) return Response.ILLEGAL_OPERATION;
+                num1 = max2;
+                num2 = max2;
+                return Response.OK;
+            }
+    b. Нарушение требования: заполняет отделение с продуктами до максимального количества
+                             соответствующего продукта
+        Исходный код:
+            public Response fillProducts()
+            {
+                if(mode == Mode.OPERATION) return Response.ILLEGAL_OPERATION;
+                num1 = max2;
+                num2 = max2;
+                return Response.OK;
+            }
+        Заменяемый код:
+            public Response fillProducts()
+            {
+                if(mode == Mode.OPERATION) return Response.ILLEGAL_OPERATION;
+                num1 = max1;
+                num2 = max2;
+                return Response.OK;
+            }
+
+2. Некорректная реализация метода enterAdminMode(long code)
+
+    Нарушение требования: при наличии внесенных покупателем средств перехода в режим отладки не происходит и
+                          возвращается CANNOT_PERFORM;
+
+    Исходный код:
+        public Response enterAdminMode(long code)
+        {
+            if(balance != 0) return Response.UNSUITABLE_CHANGE;
+            if(code != id) return Response.INVALID_PARAM;
+
+            mode = Mode.ADMINISTERING;
+            return Response.OK;
+        }
+
+    Заменяемый код:
+        public Response enterAdminMode(long code)
+        {
+            if(code != id) return Response.INVALID_PARAM;
+            if(balance != 0) return Response.CANNOT_PERFORM;
+
+            mode = Mode.ADMINISTERING;
+            return Response.OK;
+        }
+
+3. Некорректная реализация метода Response putCoin1()
+
+    Нарушение требования: при попытке внести монету, когда отделение 1 заполнено до максимума возвращает
+                          CANNOT_PERFORM; при запуске в корректных условиях увеличивает количество монет
+                          1 вида на 1, баланс пользователя на стоимость 1 монеты
+
+    Исходный код:
+        public Response putCoin1()
+        {
+            if(mode == Mode.ADMINISTERING) return Response.ILLEGAL_OPERATION;
+            if(coins2 == maxc2)            return Response.CANNOT_PERFORM;
+
+            balance += coinval2;
+            coins2++;
+
+            return Response.OK;
+        }
+    Заменяемый код:
+        public Response putCoin1()
+        {
+            if(mode == Mode.ADMINISTERING) return Response.ILLEGAL_OPERATION;
+            if(coins1 == maxc1)            return Response.CANNOT_PERFORM;
+
+            balance += coinval1;
+            coins1++;
+
+            return Response.OK;
+        }
+
+4. Некорректная реализация метода Response putCoin2()
+
+    Нарушение требования: при попытке внести монету, когда отделение 2 заполнено до максимума возвращает
+                          CANNOT_PERFORM; при запуске в корректных условиях увеличивает количество монет
+                          2 вида на 1, баланс пользователя на стоимость 2 монеты
+
+    Исходный код:
+        public Response putCoin2()
+        {
+            if(mode == Mode.ADMINISTERING) return Response.ILLEGAL_OPERATION;
+            if(coins1 == maxc1)            return Response.CANNOT_PERFORM;
+
+            balance += coinval1;
+            coins1++;
+
+            return Response.OK;
+        }
+    Заменяемый код:
+
+    public Response putCoin2()
+    {
+        if(mode == Mode.ADMINISTERING) return Response.ILLEGAL_OPERATION;
+        if(coins2 == maxc2)            return Response.CANNOT_PERFORM;
+
+        balance += coinval2;
+        coins2++;
+
+        return Response.OK;
+    }
+
+5. Неверная реализация метода Response returnMoney()
+
+   1)   Нарушаемое требование: если баланс четный, то возвращается баланс/2 монет 2 вида
+
+        Исходный код:
+            else if(balance%coinval2 == 0)
+            {
+                coins2 -= (balance/coinval2);
+                balance = 0;
+
+                return Response.OK;
+            }
+        Заменяемый код:
+            else if(balance % 2 == 0)
+            {
+                coins2 -= (balance/2);
+                balance = 0;
+
+                return Response.OK;
+            }
+   2)   Нарушаемое требование: во всех иных случаях выдается баланс/2 монет 2 вида и 1 монета 1 вида
+
+        Исходный код:
+            else
+            {
+                // using coinval1 == 1
+                coins1 -= (balance/coinval2);
+                coins2--;
+                balance = 0;
+
+                return Response.OK;
+            }
+        Заменяемый код:
+            else
+            {
+                // using coinval1 == 1
+                coins2 -= (balance/2);
+                coins1--;
+                balance = 0;
+
+                return Response.OK;
+            }
+6. Некорректная реализация метода Response giveProduct1(int number)
+
+   Нарушаемое требование: в остальных случаях сдача выдается монетами 2 вида
+                          когда это возможно, затем — монетами 1 вида
+
+   Исходный код:
+       else
+       {
+           // using coinval1 == 1
+           coins2 -= (res/coinval2);
+           coins1--;
+           balance = 0;
+           num1 -= number;
+
+           return Response.OK;
+       }
+   Заменяемый код:
+        else
+        {
+            // using coinval1 == 1
+            int remains = res % coinval2;
+            coins2 -= (res/coinval2);
+            coins1 -= remains;
+            balance = 0;
+            num1 -= number;
+
+            return Response.OK;
+        }
+7. Некорректная реализация метода Response giveProduct2(int number)
+
+   а. Нарушаемое требование: в остальных случаях сдача выдается монетами 2 вида
+                          когда это возможно, затем — монетами 1 вида
+
+       Исходный код:
+            else
+            {
+                // using coinval1 == 1
+                coins1 -= (res/coinval2);
+                coins2--;
+                balance = 0;
+                num2 -= number;
+
+                return Response.OK;
+            }
+       Заменяемый код:
+            else
+            {
+                // using coinval1 == 1
+                int remains = res % coinval2;
+                coins2 -= (res/coinval2);
+                coins1 -= remains;
+                balance = 0;
+                num1 -= number;
+
+                return Response.OK;
+            }
+
+   b. Нарушаемое требование:  если после выполнения операции в автомате недостаточно сдачи,
+                              то возвращается TOO_BIG_CHANGE
+       Исходный код:
+           else if(res > coins1*coinval1 + coins2*coinval2)
+           {
+               return Response.TOO_BIG_CHANGE;
+           }
+       Заменяемый код:
+           else if(res > coins1*coinval1 + coins2*coinval2)
+           {
+               return Response.TOO_BIG_CHANGE;
+           }
+8. Некорректная реализация метода getPoint2()
+    Нарушение требования: возвращает количество внесенных монет 2 вида,
+                          вне режима отладки возвращает 0;
+
+    Исходный код:
+        public int getCoins2()
+        {
+            if(mode == Mode.OPERATION)
+                return coins1;
+            else
+                return coins2;
+        }
+    Заменяемый код:
+        public int getCoins2()
+        {
+            if(mode == Mode.OPERATION)
+                return 0;
+            else
+                return coins2;
+        }
+9. Некорректная реализация метода setPrices():
+    Нарушение требования:  при попытке установки значений цен меньше или равно 0 возвращает INVALID_PARAM
+
+    Исходный код:
+    if(p1 <= 0 || p1 <= 0) return Response.INVALID_PARAM;
+
+    Заменяемый код:
+    if(p1 <= 0 || p2 <= 0) return Response.INVALID_PARAM;
+
+10. Некорректная реализация метода fillCoins():
+    Нарушение требования: попытке указать c1<=0 или больше максимума монет 1 или при попытке задать c2 <=0 или больше
+                          максимума монет 2 вида возвращает INVALID_PARAM;
+
+    Исходный код:
+        if(c1 <= 0 || c2 > maxc1) return Response.INVALID_PARAM;
+    Заменяемый код:
+        if(c1 <= 0 || c1 > maxc1) return Response.INVALID_PARAM;
